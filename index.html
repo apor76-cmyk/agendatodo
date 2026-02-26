@@ -45,15 +45,6 @@ input,select,textarea{border:1px solid var(--border);background:var(--card);colo
 .prio-low{color:#10b981;font-weight:600}
 .todo-text{writing-mode:horizontal-tb;word-break:keep-all;white-space:normal}
 .todo-check{ width:16px; height:16px; }
-
-/* 비밀번호 모달 */
-#pwModal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;
-  background:rgba(0,0,0,0.5);justify-content:center;align-items:center;z-index:1000;}
-#pwModal div{background:var(--card);padding:24px;border-radius:12px;max-width:300px;width:90%;
-display:flex;flex-direction:column;gap:12px;}
-#pwModal div div{margin-bottom:4px;font-weight:600;}
-#pwModal input{width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);}
-#pwModal button{padding:6px 12px;border-radius:8px;cursor:pointer;}
 </style>
 </head>
 
@@ -78,79 +69,47 @@ display:flex;flex-direction:column;gap:12px;}
 
 <div class="container" id="app"></div>
 
-<!-- 비밀번호 모달 -->
-<div id="pwModal">
-  <div>
-    <div>비밀번호 입력</div>
-    <input type="password" id="pwInput" placeholder="비밀번호">
-    <div style="display:flex;justify-content:flex-end;gap:8px;">
-      <button id="pwSubmit">확인</button>
-      <button id="pwCancel">취소</button>
-    </div>
-  </div>
-</div>
-
 <script>
 /* ===== 비밀번호 관리 ===== */
-const PW_KEY="agenda_pw";
-if(!localStorage.getItem(PW_KEY)) localStorage.setItem(PW_KEY,"1234");
+const PW_KEY = "agenda_pw"
+if(!localStorage.getItem(PW_KEY)) localStorage.setItem(PW_KEY, "1234") // 초기 비밀번호
 
-function checkPasswordModal(){
-  return new Promise((resolve)=>{
-    const modal=document.getElementById("pwModal");
-    const input=document.getElementById("pwInput");
-    const submit=document.getElementById("pwSubmit");
-    const cancel=document.getElementById("pwCancel");
-    modal.style.display="flex";
-    input.value=""; input.focus();
-
-    function cleanup(){
-      modal.style.display="none";
-      submit.removeEventListener("click",onSubmit);
-      cancel.removeEventListener("click",onCancel);
-    }
-    function onSubmit(){
-      if(input.value===localStorage.getItem(PW_KEY)){ cleanup(); resolve(true);}
-      else { alert("비밀번호가 틀립니다"); input.value=""; input.focus(); }
-    }
-    function onCancel(){ cleanup(); resolve(false); }
-
-    submit.addEventListener("click",onSubmit);
-    cancel.addEventListener("click",onCancel);
-    input.addEventListener("keyup",(e)=>{if(e.key==="Enter") onSubmit();});
-  });
+function checkPassword(promptText="비밀번호 입력") {
+  const pw = prompt(promptText)
+  if(pw===null) return false // 취소
+  const saved=localStorage.getItem(PW_KEY)
+  if(pw===saved) return true
+  alert("비밀번호가 틀립니다")
+  return false
 }
 
-async function changePassword(){
-  const ok = await checkPasswordModal();
-  if(!ok) return;
-  const newPw=prompt("새 비밀번호 입력");
-  if(!newPw) return alert("새 비밀번호를 입력해야 합니다");
-  localStorage.setItem(PW_KEY,newPw);
-  alert("비밀번호가 변경되었습니다");
+function changePassword(){
+  if(!checkPassword("기존 비밀번호 입력")) return
+  const newPw = prompt("새 비밀번호 입력")
+  if(!newPw) return alert("새 비밀번호를 입력해야 합니다")
+  localStorage.setItem(PW_KEY,newPw)
+  alert("비밀번호가 변경되었습니다")
 }
 
 // 페이지 로드 시 비밀번호 확인
-window.addEventListener("load", async ()=>{
-  const ok=await checkPasswordModal();
-  if(!ok){
-    document.body.innerHTML="<h2 style='text-align:center;margin-top:50px'>비밀번호가 틀려 앱에 접근할 수 없습니다</h2>";
-    throw new Error("비밀번호 오류");
+window.addEventListener("load",()=>{
+  if(!checkPassword("앱 접근 비밀번호 입력")){
+    document.body.innerHTML="<h2 style='text-align:center;margin-top:50px'>비밀번호가 틀려 앱에 접근할 수 없습니다</h2>"
+    throw new Error("비밀번호 오류로 앱 종료")
   }
-});
+})
 
 /* ===== 기존 Agenda+Todo 코드 ===== */
-// 기존 스크립트는 그대로 유지 (원래 올려주신 전체 코드 붙여넣기)
-const storageKey="agendaTodoUltimate";
+const storageKey="agendaTodoUltimate"
 
-let data=JSON.parse(localStorage.getItem(storageKey)||`{"agendas":[],"todos":[],"categories":[],"selectedCategory":null,"lastTab":"agenda"}`);
-if(!data.categories) data.categories=[];
-if(data.selectedCategory===undefined) data.selectedCategory=null;
+let data=JSON.parse(localStorage.getItem(storageKey)||`{"agendas":[],"todos":[],"categories":[],"selectedCategory":null,"lastTab":"agenda"}`)
+if(!data.categories) data.categories=[]
+if(data.selectedCategory===undefined) data.selectedCategory=null
 
-let editingIndex=null;
-let editingTodoIndex=null;
-let dragType=null;
-let dragIndex=null;
+let editingIndex=null
+let editingTodoIndex=null
+let dragType=null
+let dragIndex=null
 
 function save(){ localStorage.setItem(storageKey,JSON.stringify(data)) }
 function el(tag,cls){ const e=document.createElement(tag); if(cls)e.className=cls; return e }
@@ -167,12 +126,375 @@ const ghPush=document.getElementById("ghPush")
 const ghPull=document.getElementById("ghPull")
 const ghTokenReset=document.getElementById("ghTokenReset")
 
-// 나머지 기존 코드 그대로
 tabAgenda.onclick=()=>setTab("agenda")
 tabTodo.onclick=()=>setTab("todo")
 function setTab(tab){ data.lastTab=tab; save(); render() }
 
-// ... (기존 render, addTodo, addAgenda 등 모든 코드 그대로) ...
+function handleDragStart(type,index){ dragType=type; dragIndex=index }
+function handleDragOver(e){ e.preventDefault() }
+function handleDrop(type,index){
+ if(dragType!==type || dragIndex===index) return
+ const list=type==="agenda"?data.agendas:data.todos
+ const item=list.splice(dragIndex,1)[0]
+ list.splice(index,0,item)
+ dragIndex=null; dragType=null
+ save(); render()
+}
+
+function render(){
+ app.innerHTML=""
+ tabAgenda.classList.toggle("active",data.lastTab==="agenda")
+ tabTodo.classList.toggle("active",data.lastTab==="todo")
+ if(data.lastTab==="agenda") renderAgenda()
+ else renderTodo()
+}
+
+/* ===== 카테고리 ===== */
+function renderCategoryTabs(){
+ const bar=el("div","category-bar")
+ const list = data.lastTab==="agenda" ? data.agendas : data.todos
+ const totalCount = list.length
+ const all=el("div","category-pill "+(data.selectedCategory===null?"active":""))
+ all.textContent=`전체 (${totalCount})`
+ all.onclick=()=>{data.selectedCategory=null;save();render()}
+ bar.appendChild(all)
+
+ data.categories.forEach((c,i)=>{
+   const count = list.filter(item=>item.category===i).length
+   const pill=el("div","category-pill "+(data.selectedCategory===i?"active":""))
+   pill.textContent=`${c.name} (${count})`
+   pill.onclick=()=>{data.selectedCategory=i;save();render()}
+   bar.appendChild(pill)
+ })
+ return bar
+}
+
+function renderCategoryManager(){
+ const card=el("div","card")
+ card.innerHTML=`
+ <div class="row">
+   <select id="catSelect" style="max-width:200px">
+     <option value="">선택</option>
+     ${data.categories.map((c,i)=>`<option value="${i}">${c.name}</option>`).join("")}
+   </select>
+   <input id="catEditName" placeholder="이름 수정" style="max-width:200px">
+   <button onclick="applyCategoryEdit()">적용</button>
+   <button onclick="deleteSelectedCategory()">삭제</button>
+   <input id="catName" placeholder="새 카테고리" style="max-width:200px">
+   <button onclick="addCategory()">추가</button>
+ </div>`
+ return card
+}
+
+function applyCategoryEdit(){
+ const i=document.getElementById("catSelect").value
+ const name=document.getElementById("catEditName").value.trim()
+ if(i===""||!name) return
+ data.categories[i].name=name
+ save(); render()
+}
+function deleteSelectedCategory(){
+ const i=document.getElementById("catSelect").value
+ if(i==="") return
+ if(!confirm("삭제할까요?")) return
+ data.categories.splice(i,1)
+ data.agendas.forEach(a=>{ if(a.category==i) a.category=null })
+ data.todos.forEach(t=>{ if(t.category==i) t.category=null })
+ data.selectedCategory=null
+ save(); render()
+}
+function addCategory(){
+ const name=catName.value.trim()
+ if(!name) return
+ data.categories.push({name})
+ save(); render()
+}
+
+/* ===== 안건 ===== */
+function renderAgenda(){
+ app.appendChild(renderCategoryTabs())
+ app.appendChild(renderCategoryManager())
+
+ const addCard=el("div","card")
+ addCard.innerHTML=`
+ <div class="row">
+   <input id="agTitle" placeholder="안건 제목">
+   <select id="agCategory">
+     <option value="">카테고리 없음</option>
+     ${data.categories.map((c,i)=>`<option value="${i}">${c.name}</option>`).join("")}
+   </select>
+   <select id="agColor">
+     <option value="">기본</option>
+     <option value="#ef4444">빨강</option>
+     <option value="#f97316">주황</option>
+     <option value="#eab308">노랑</option>
+     <option value="#22c55e">초록</option>
+     <option value="#3b82f6">파랑</option>
+     <option value="#6366f1">남색</option>
+     <option value="#a855f7">보라</option>
+   </select>
+   <button onclick="addAgenda()">추가</button>
+ </div>`
+ app.appendChild(addCard)
+
+ let agendas=[...data.agendas]
+ agendas.sort((a,b)=>(b.pinned||0)-(a.pinned||0))
+
+ agendas
+ .filter(a=> data.selectedCategory===null || a.category===data.selectedCategory)
+ .filter(a=>filterText(a.title+a.status+a.opinion+a.review+a.progress))
+ .forEach(a=>{
+  const i=data.agendas.indexOf(a)
+  const c=el("div","card "+(a.pinned?"pinned":""))
+  c.draggable=true
+  c.ondragstart=()=>handleDragStart("agenda",i)
+  c.ondragover=handleDragOver
+  c.ondrop=()=>handleDrop("agenda",i)
+
+  if(editingIndex===i){
+    c.innerHTML=`
+<input id="editTitle" value="${a.title||""}">
+<select id="editCategory">
+  <option value="">카테고리 없음</option>
+  ${data.categories.map((c,ci)=>`<option value="${ci}" ${a.category===ci?"selected":""}>${c.name}</option>`).join("")}
+</select>
+<select id="editColor">
+  <option value="">기본</option>
+  <option value="#ef4444" ${a.color=="#ef4444"?"selected":""}>빨강</option>
+  <option value="#f97316" ${a.color=="#f97316"?"selected":""}>주황</option>
+  <option value="#eab308" ${a.color=="#eab308"?"selected":""}>노랑</option>
+  <option value="#22c55e" ${a.color=="#22c55e"?"selected":""}>초록</option>
+  <option value="#3b82f6" ${a.color=="#3b82f6"?"selected":""}>파랑</option>
+  <option value="#6366f1" ${a.color=="#6366f1"?"selected":""}>남색</option>
+  <option value="#a855f7" ${a.color=="#a855f7"?"selected":""}>보라</option>
+</select>
+<textarea id="editStatus">${a.status||""}</textarea>
+<textarea id="editOpinion">${a.opinion||""}</textarea>
+<textarea id="editReview">${a.review||""}</textarea>
+<textarea id="editProgress">${a.progress||""}</textarea>
+<div class="row">
+<button onclick="saveEdit(${i})">저장</button>
+<button onclick="cancelEdit()">취소</button>
+<button onclick="togglePin(${i})">${a.pinned?"핀해제":"중요고정"}</button>
+<button onclick="deleteAgenda(${i})">삭제</button>
+</div>`
+  }else{
+    c.innerHTML=`
+<b style="color:${a.color||'inherit'}">${a.title} ${a.pinned?"📌":""}</b>
+<div class="small">현황</div><div>${a.status||""}</div>
+<div class="small">의견</div><div>${a.opinion||""}</div>
+<div class="small">검토</div><div>${a.review||""}</div>
+<div class="small">경과</div><div>${a.progress||""}</div>
+<div class="row">
+<button onclick="startEdit(${i})">수정</button>
+<button onclick="togglePin(${i})">${a.pinned?"핀해제":"중요고정"}</button>
+<button onclick="deleteAgenda(${i})">삭제</button>
+</div>`
+  }
+  app.appendChild(c)
+ })
+}
+
+function addAgenda(){
+ const t=agTitle.value.trim()
+ if(!t) return
+ data.agendas.unshift({title:t,category: agCategory.value===""?null:Number(agCategory.value),color: agColor.value || "",status:"",opinion:"",review:"",progress:"",pinned:false})
+ save(); render()
+}
+
+function startEdit(i){ editingIndex=i; render() }
+function cancelEdit(){ editingIndex=null; render() }
+function saveEdit(i){
+ const catVal=document.getElementById("editCategory").value
+ data.agendas[i]={...data.agendas[i],
+   title:editTitle.value,
+   category: catVal===""?null:Number(catVal),
+   color: document.getElementById("editColor").value || "",
+   status:editStatus.value,
+   opinion:editOpinion.value,
+   review:editReview.value,
+   progress:editProgress.value
+ }
+ editingIndex=null
+ save(); render()
+}
+function togglePin(i){ data.agendas[i].pinned=!data.agendas[i].pinned; save(); render() }
+function deleteAgenda(i){ if(!confirm("삭제할까요?"))return; data.agendas.splice(i,1); save(); render() }
+
+/* ===== TODO ===== */
+function renderTodo(){
+ app.appendChild(renderCategoryTabs())
+
+ const addCard=el("div","card")
+ addCard.innerHTML=`<div class="row">
+ <input id="todoText" placeholder="할일 내용">
+ <select id="todoCategory">
+  <option value="">카테고리 없음</option>
+  ${data.categories.map((c,i)=>`<option value="${i}">${c.name}</option>`).join("")}
+ </select>
+ <select id="todoPriority">
+ <option value="high">높음</option>
+ <option value="mid">보통</option>
+ <option value="low">낮음</option>
+ </select>
+ <input type="date" id="todoDate">
+ <button onclick="addTodo()">추가</button></div>`
+ app.appendChild(addCard)
+
+ data.todos
+ .filter(t=> data.selectedCategory===null || t.category===data.selectedCategory)
+ .filter(t=>filterText(t.text))
+ .forEach((t,i)=>{
+  const c=el("div","card")
+  c.style.display="flex"
+  c.style.alignItems="center"
+  c.style.gap="8px"
+  c.draggable=true
+  c.ondragstart=()=>handleDragStart("todo",i)
+  c.ondragover=handleDragOver
+  c.ondrop=()=>handleDrop("todo",i)
+
+  const prioClass = t.priority==="high"?"prio-high":t.priority==="mid"?"prio-mid":"prio-low"
+
+  if(editingTodoIndex===i){
+    c.innerHTML=`
+    <input id="editTodoText" value="${t.text}">
+    <select id="editTodoCategory">
+      <option value="">카테고리 없음</option>
+      ${data.categories.map((c,ci)=>`<option value="${ci}" ${t.category===ci?"selected":""}>${c.name}</option>`).join("")}
+    </select>
+    <button onclick="saveTodoEdit(${i})">저장</button>
+    <button onclick="cancelTodoEdit()">취소</button>`
+  }else{
+    c.innerHTML=`
+    <div class="todo-text" style="flex:1;text-align:left">
+      <div>${t.text}</div>
+      <div class="small ${prioClass}">${t.priority} | ${t.date||""}</div>
+    </div>
+    <div class="todo-item">
+      <input class="todo-check" type="checkbox" ${t.done?"checked":""} onchange="toggleTodo(${i})">
+      <button onclick="startTodoEdit(${i})">수정</button>
+      <button onclick="deleteTodo(${i})">삭제</button>
+    </div>`
+  }
+  if(t.done) c.classList.add("done")
+  app.appendChild(c)
+ })
+}
+
+function startTodoEdit(i){ editingTodoIndex=i; render() }
+function cancelTodoEdit(){ editingTodoIndex=null; render() }
+function saveTodoEdit(i){
+ data.todos[i].text=document.getElementById("editTodoText").value
+ const catVal=document.getElementById("editTodoCategory").value
+ data.todos[i].category = catVal===""?null:Number(catVal)
+ editingTodoIndex=null
+ save(); render()
+}
+function addTodo(){
+ const text=todoText.value.trim()
+ if(!text) return
+ data.todos.push({text,category: todoCategory.value===""?null:Number(todoCategory.value),priority:todoPriority.value,date:todoDate.value,done:false})
+ save(); render()
+}
+function toggleTodo(i){
+ const item=data.todos[i]
+ item.done=!item.done
+ if(item.done){ data.todos.splice(i,1); data.todos.push(item) }
+ save(); render()
+}
+function deleteTodo(i){ data.todos.splice(i,1); save(); render() }
+
+function filterText(t){
+ const q=searchInput.value.toLowerCase()
+ return !q || (t||"").toLowerCase().includes(q)
+}
+searchInput.oninput=render
+
+toggleDark.onclick=()=>document.body.classList.toggle("dark")
+
+backupBtn.onclick=()=>{
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"})
+ const a=document.createElement("a")
+ a.href=URL.createObjectURL(blob)
+ a.download="agenda-backup.json"
+ a.click()
+}
+restoreBtn.onclick=()=>fileInput.click()
+fileInput.onchange=e=>{
+ const file=e.target.files[0]
+ if(!file) return
+ const reader=new FileReader()
+ reader.onload=()=>{
+   if(confirm("현재 데이터를 덮어쓸까요?")){
+     data=JSON.parse(reader.result)
+     save(); render()
+   }
+ }
+ reader.readAsText(file)
+}
+
+/* GitHub Sync */
+const GH_REPO="scheduledata"
+const GH_OWNER="apor76-cmyk"
+const GH_PATH="data/agenda.json"
+const TOKEN_KEY="gh_token"
+
+function getToken(){
+ let t=localStorage.getItem(TOKEN_KEY)
+ if(!t){
+   t=prompt("GitHub Token 입력 (repo 권한)")
+   if(t) localStorage.setItem(TOKEN_KEY,t)
+ }
+ return t
+}
+
+ghTokenReset.onclick=()=>{
+ localStorage.removeItem(TOKEN_KEY)
+ alert("토큰이 초기화되었습니다")
+}
+
+ghPush.onclick=async()=>{
+ const token=getToken()
+ if(!token) return
+
+ const url=`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}`
+
+ let sha=null
+ const res=await fetch(url,{headers:{Authorization:`token ${token}`}})
+ if(res.ok){ const j=await res.json(); sha=j.sha }
+
+ const body={
+   message:"update agenda data",
+   content:btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2)))),
+   sha
+ }
+
+ const r=await fetch(url,{
+   method:"PUT",
+   headers:{Authorization:`token ${token}`},
+   body:JSON.stringify(body)
+ })
+
+ if(r.ok) alert("업로드 완료")
+ else alert("업로드 실패")
+}
+
+ghPull.onclick=async()=>{
+ const token=getToken()
+ if(!token) return
+
+ const url=`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}`
+
+ const res=await fetch(url,{headers:{Authorization:`token ${token}`}})
+ if(!res.ok){ alert("파일 없음"); return }
+
+ const j=await res.json()
+ const decoded=decodeURIComponent(escape(atob(j.content)))
+ data=JSON.parse(decoded)
+ save(); render()
+ alert("다운로드 완료")
+}
 
 // 비밀번호 변경 버튼 추가
 const pwBtn=document.createElement("button")

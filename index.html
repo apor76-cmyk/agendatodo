@@ -3,521 +3,642 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Agenda + Todo Manager FINAL</title>
+<title>Link Manager Ultimate v16</title>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 
 <style>
 :root{
-  --bg:#f3f4f6;
-  --card:#ffffff;
-  --text:#111827;
-  --sub:#6b7280;
-  --border:#e5e7eb;
-  --accent:#2563eb;
+--bg:#f6f7fb;
+--card:#fff;
+--text:#111827;
+--sub:#6b7280;
+--border:#e5e7eb;
+--accent:#2563eb;
+--star:#f59e0b;
 }
+
 .dark{
-  --bg:#0b1220;
-  --card:#111827;
-  --text:#e5e7eb;
-  --sub:#9ca3af;
-  --border:#1f2937;
-  --accent:#3b82f6;
+--bg:#0f172a;
+--card:#1e293b;
+--text:#f1f5f9;
+--sub:#94a3b8;
+--border:#334155;
+--accent:#3b82f6;
 }
-*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto}
-body{margin:0;background:var(--bg);color:var(--text)}
-header{display:flex;gap:8px;padding:12px;border-bottom:1px solid var(--border);background:var(--card);position:sticky;top:0;z-index:10;flex-wrap:wrap}
-button{border:1px solid var(--border);background:var(--card);color:var(--text);padding:8px 12px;border-radius:8px;cursor:pointer;white-space:nowrap}
-button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-input,select,textarea{border:1px solid var(--border);background:var(--card);color:var(--text);padding:8px;border-radius:8px;width:100%}
-.container{max-width:1100px;margin:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px}
-.row{display:flex;gap:8px;flex-wrap:wrap}
-.todo-item{display:flex;gap:4px;align-items:center;margin-left:auto}
-.done{opacity:.5;text-decoration:line-through}
-.search{flex:1}
-.right{margin-left:auto}
-.small{font-size:12px;color:var(--sub)}
-.pinned{border:2px solid var(--accent)}
-.category-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
-.category-pill{padding:6px 10px;border-radius:999px;border:1px solid var(--border);cursor:pointer}
-.category-pill.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-.prio-high{color:#ef4444;font-weight:600}
-.prio-mid{color:#f59e0b;font-weight:600}
-.prio-low{color:#10b981;font-weight:600}
-.todo-text{writing-mode:horizontal-tb;word-break:keep-all;white-space:normal}
-.todo-check{ width:16px; height:16px; }
+
+body{
+margin:0;
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+background:var(--bg);
+color:var(--text);
+}
+
+header{
+padding:14px;
+background:var(--card);
+border-bottom:1px solid var(--border);
+display:flex;
+gap:8px;
+flex-wrap:wrap;
+}
+
+button{
+padding:6px 12px;
+border-radius:12px;
+border:1px solid var(--border);
+background:var(--card);
+cursor:pointer;
+font-size:13px;
+}
+
+.dark button{color:white;}
+
+.primary{
+background:var(--accent);
+color:white;
+border:none;
+}
+
+.container{
+max-width:1400px;
+margin:auto;
+padding:20px;
+}
+
+.card{
+background:var(--card);
+padding:20px;
+border-radius:20px;
+border:1px solid var(--border);
+margin-bottom:20px;
+}
+
+.category-bar{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+}
+
+.category-btn{
+padding:8px 16px;
+border-radius:999px;
+}
+
+.category-btn.active{
+background:var(--accent);
+color:white;
+border:none;
+}
+
+.link-list{
+display:grid;
+gap:16px;
+margin-top:10px;
+grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+}
+
+.link-card{
+background:var(--card);
+border:1px solid var(--border);
+border-radius:18px;
+overflow:hidden;
+cursor:pointer;
+display:flex;
+flex-direction:column;
+position:relative;
+transition: transform 0.2s;
+height:240px;
+}
+
+.link-card.favorite{order:-1;}
+
+.thumb{
+width:100%;
+height:120px;
+display:flex;
+align-items:center;
+justify-content:center;
+overflow:hidden;
+}
+
+.thumb img{
+width:100%;
+height:100%;
+object-fit:cover;
+}
+
+.link-body{
+padding:10px;
+flex:1;
+overflow:hidden;
+}
+
+.link-title{
+font-size:13px;
+font-weight:600;
+}
+
+/* 타입별 제목 색상 */
+.title-youtube{color:#2563eb;}
+.title-link{color:#dc2626;}
+.title-photo{color:#059669;}
+.title-text{color:#7c3aed;}
+
+/* 다크모드 색상 */
+.dark .title-youtube{color:#60a5fa;}
+.dark .title-link{color:#f87171;}
+.dark .title-photo{color:#34d399;}
+.dark .title-text{color:#a78bfa;}
+.star{
+cursor:pointer;
+font-size:18px;
+color:var(--sub);
+}
+
+.star.active{
+color:var(--star);
+}
+
+.manage-actions{
+display:flex;
+gap:6px;
+margin-top:6px;
+}
+
+textarea{
+width:100%;
+min-height:120px;
+border-radius:10px;
+border:1px solid var(--border);
+padding:10px;
+}
+
+input,select{
+padding:8px 10px;
+border-radius:10px;
+border:1px solid var(--border);
+}
+
+#photoModal,#textModal{
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.8);
+justify-content:center;
+align-items:center;
+z-index:9999;
+}
+
+.modalBox{
+background:white;
+padding:30px;
+border-radius:16px;
+max-width:700px;
+width:90%;
+max-height:80%;
+overflow:auto;
+white-space: pre-wrap;
+}
 </style>
 </head>
 
 <body>
 
-<header>
-<button id="tabAgenda">안건관리</button>
-<button id="tabTodo">할일관리</button>
-<input class="search" id="search" placeholder="전체 검색">
-
-<button id="backupBtn">백업</button>
-<button id="restoreBtn">복원</button>
-
-<!-- GitHub Sync 버튼 -->
-<button id="ghPush">업로드</button>
-<button id="ghPull">내려받기</button>
-<button id="ghTokenReset">토큰초기화</button>
-
-<!-- 전체 삭제 버튼 -->
-<button id="clearAll">전체 삭제</button>
-
-<input type="file" id="fileInput" hidden>
-<button id="toggleDark" class="right">다크모드</button>
+<header id="topbar">
+<button class="primary" onclick="addCategory()">+카테고리</button>
+<button onclick="toggleManage()">관리모드</button>
+<button onclick="toggleHide()">숨김모드</button>
+<button onclick="toggleDark()">다크모드</button>
+<button onclick="downloadBackup()">백업</button>
+<button onclick="restoreBackup()">복원</button>
+<button onclick="syncFromGit()">⬇동기화</button>
+<button onclick="syncToGit()">⬆업로드</button>
+<input id="searchInput" placeholder="검색" oninput="renderLinks()">
 </header>
 
-<div class="container" id="app"></div>
+<div class="container">
+
+<div class="card" id="inputBox">
+<select id="type">
+<option value="youtube">유튜브</option>
+<option value="link">링크</option>
+<option value="photo">사진</option>
+<option value="text">텍스트</option>
+</select>
+<input id="title" placeholder="제목">
+<input id="url" placeholder="URL">
+<input type="file" id="file" accept="image/*">
+<textarea id="text" rows="6" placeholder="텍스트 입력"></textarea>
+<button class="primary" onclick="addLink()">저장</button>
+</div>
+
+<div class="card">
+<div id="categoryBar" class="category-bar"></div>
+</div>
+
+<div class="card">
+<h3>⭐ 즐겨찾기</h3>
+<div id="favList" class="link-list"></div>
+</div>
+
+<div class="card">
+<h3>모든 링크</h3>
+<div id="linkList" class="link-list"></div>
+</div>
+
+</div>
+
+<div id="photoModal" onclick="this.style.display='none'">
+<img id="modalImg" style="max-width:90%;max-height:90%">
+</div>
+
+<div id="textModal" onclick="this.style.display='none'">
+<div class="modalBox">
+<h3 id="textTitle"></h3>
+<p id="textBody"></p>
+</div>
+</div>
 
 <script>
-/* ===== 비밀번호 관리 ===== */
-const PW_KEY = "agenda_pw"
-if(!localStorage.getItem(PW_KEY)) localStorage.setItem(PW_KEY, "1234") // 초기 비밀번호
+async function encryptText(text,password){
+const enc=new TextEncoder()
+const keyMaterial=await crypto.subtle.importKey(
+"raw",enc.encode(password),"PBKDF2",false,["deriveKey"]
+)
 
-function checkPassword(promptText="비밀번호 입력") {
-  const pw = prompt(promptText)
-  if(pw===null) return false
-  const saved=localStorage.getItem(PW_KEY)
-  if(pw===saved) return true
-  alert("비밀번호가 틀립니다")
-  return false
+const key=await crypto.subtle.deriveKey(
+{
+name:"PBKDF2",
+salt:enc.encode("linkmanager"),
+iterations:100000,
+hash:"SHA-256"
+},
+keyMaterial,
+{name:"AES-GCM",length:256},
+false,
+["encrypt"]
+)
+
+const iv=crypto.getRandomValues(new Uint8Array(12))
+
+const encrypted=await crypto.subtle.encrypt(
+{name:"AES-GCM",iv},
+key,
+enc.encode(text)
+)
+
+return btoa(JSON.stringify({
+iv:Array.from(iv),
+data:Array.from(new Uint8Array(encrypted))
+}))
 }
 
-function changePassword(){
-  if(!checkPassword("기존 비밀번호 입력")) return
-  const newPw = prompt("새 비밀번호 입력")
-  if(!newPw) return alert("새 비밀번호를 입력해야 합니다")
-  localStorage.setItem(PW_KEY,newPw)
-  alert("비밀번호가 변경되었습니다")
+async function decryptText(cipher,password){
+
+try{
+
+const enc=new TextEncoder()
+const obj=JSON.parse(atob(cipher))
+
+const keyMaterial=await crypto.subtle.importKey(
+"raw",enc.encode(password),"PBKDF2",false,["deriveKey"]
+)
+
+const key=await crypto.subtle.deriveKey(
+{
+name:"PBKDF2",
+salt:enc.encode("linkmanager"),
+iterations:100000,
+hash:"SHA-256"
+},
+keyMaterial,
+{name:"AES-GCM",length:256},
+false,
+["decrypt"]
+)
+
+const decrypted=await crypto.subtle.decrypt(
+{name:"AES-GCM",iv:new Uint8Array(obj.iv)},
+key,
+new Uint8Array(obj.data)
+)
+
+return new TextDecoder().decode(decrypted)
+
+}catch{
+return null
 }
 
-// 페이지 로드 시 비밀번호 확인
-window.addEventListener("load",()=>{
-  if(!checkPassword("앱 접근 비밀번호 입력")){
-    document.body.innerHTML="<h2 style='text-align:center;margin-top:50px'>비밀번호가 틀려 앱에 접근할 수 없습니다</h2>"
-    throw new Error("비밀번호 오류로 앱 종료")
-  }
+}
+const GITHUB={user:"apor76-cmyk",repo:"data1",dataPath:"linkmanager.json"}
+let data={Home:[]}, currentCategory="Home", manageMode=false, sortable, favSortable
+
+function save(){localStorage.setItem("lmData1",JSON.stringify(data))}
+function load(){const s=localStorage.getItem("lmData1"); if(s){data=JSON.parse(s); currentCategory=Object.keys(data)[0]}}
+
+function toggleDark(){document.body.classList.toggle("dark")}
+
+function toggleHide(){
+const bar=document.getElementById("topbar")
+const input=document.getElementById("inputBox")
+if(bar.style.display==="none"){
+bar.style.display="flex"; input.style.display="block"
+const btn=document.getElementById("restoreBtn"); if(btn) btn.remove()
+}else{
+bar.style.display="none"; input.style.display="none"
+const btn=document.createElement("button")
+btn.id="restoreBtn"; btn.innerText="기능보기"
+btn.style.position = "fixed"; btn.style.top = "20px"; btn.style.right = "20px"
+btn.onclick=toggleHide
+document.body.appendChild(btn)
+}
+setTimeout(()=>{
+if(sortable) sortable.option("disabled", document.getElementById("topbar").style.display==="none")
+if(favSortable) favSortable.option("disabled", document.getElementById("topbar").style.display==="none")
+},50)
+}
+
+function getYoutubeId(url){if(url.includes("youtu.be/")) return url.split("youtu.be/")[1].split("?")[0]; if(url.includes("v=")) return url.split("v=")[1].split("&")[0]; return ""}
+
+function addCategory(){const name=prompt("카테고리 이름"); if(!name) return; if(!data[name]){data[name]=[]; currentCategory=name; save(); renderCategories(); renderLinks()}}
+
+function renderCategories(){
+const bar=document.getElementById("categoryBar"); bar.innerHTML=""
+Object.keys(data).forEach(cat=>{
+const wrap=document.createElement("div")
+const btn=document.createElement("button")
+btn.textContent=cat; btn.className="category-btn"
+if(cat===currentCategory) btn.classList.add("active")
+btn.onclick=()=>{
+currentCategory=cat
+renderCategories()
+renderLinks()
+}
+wrap.appendChild(btn)
+if(manageMode){
+const edit=document.createElement("button"); edit.textContent="✏"; edit.onclick=()=>{
+const n=prompt("새 이름",cat); if(n && !data[n]){data[n]=data[cat]; delete data[cat]; currentCategory=n; save(); renderCategories()}
+}
+const del=document.createElement("button"); del.textContent="🗑"; del.onclick=()=>{if(confirm("삭제?")){delete data[cat]; currentCategory=Object.keys(data)[0]; save(); renderCategories(); renderLinks()}}
+wrap.appendChild(edit); wrap.appendChild(del)
+}
+bar.appendChild(wrap)
 })
 
-/* ===== 기존 Agenda+Todo 코드 ===== */
-const storageKey="agendaTodoUltimate"
+/* 카테고리 드래그 정렬 */
+if(window.categorySortable) window.categorySortable.destroy()
 
-let data=JSON.parse(localStorage.getItem(storageKey)||`{"agendas":[],"todos":[],"categories":[],"selectedCategory":null,"lastTab":"agenda"}`)
-if(!data.categories) data.categories=[]
-if(data.selectedCategory===undefined) data.selectedCategory=null
+window.categorySortable = new Sortable(bar,{
+animation:200,
+disabled: document.getElementById("topbar").style.display==="none",
+onEnd:function(evt){
+const newOrder=[...bar.children].map(el=>el.querySelector(".category-btn").innerText)
+const newData={}
+newOrder.forEach(name=>{
+newData[name]=data[name]
+})
+data=newData
+currentCategory=newOrder[0]
+save()
+renderCategories()
+renderLinks()
+}
+})
+}
+function renderLinks(){
+const box=document.getElementById("linkList")
+const favBox=document.getElementById("favList")
+box.innerHTML=""; favBox.innerHTML=""
+let list=[...data[currentCategory]]
+const search=document.getElementById("searchInput").value.toLowerCase()
+list=list.filter(i=>i.title.toLowerCase().includes(search))
+list.forEach(item=>{
+const card=document.createElement("div")
+card.className="link-card"
+if(item.favorite) card.classList.add("favorite")
+let thumb=""
+if(item.type==="youtube"){const id=getYoutubeId(item.url); thumb=`<div class="thumb"><img src="https://img.youtube.com/vi/${id}/mqdefault.jpg"></div>`}
+else if(item.type==="link"){
+let icon="🌐"
+if(item.icon){
+icon=`<img src="${item.icon}" style="width:100%;height:100%;object-fit:cover">`}else{
+try{
+const domain=new URL(item.url).hostname
+icon=`<img src="https://www.google.com/s2/favicons?sz=64&domain=${domain}">`
+}catch{}
+}
+thumb=`<div class="thumb">${icon}</div>`
+}
+else if(item.type==="photo"){thumb=`<div class="thumb"><img src="${item.url}" onclick="showModal('${item.url}')"></div>`}
+else if(item.type==="text"){
+let preview=""
 
-let editingIndex=null
-let editingTodoIndex=null
-let dragType=null
-let dragIndex=null
-
-function save(){ localStorage.setItem(storageKey,JSON.stringify(data)) }
-function el(tag,cls){ const e=document.createElement(tag); if(cls)e.className=cls; return e }
-
-const app=document.getElementById("app")
-const tabAgenda=document.getElementById("tabAgenda")
-const tabTodo=document.getElementById("tabTodo")
-const searchInput=document.getElementById("search")
-const backupBtn=document.getElementById("backupBtn")
-const restoreBtn=document.getElementById("restoreBtn")
-const fileInput=document.getElementById("fileInput")
-const toggleDark=document.getElementById("toggleDark")
-const ghPush=document.getElementById("ghPush")
-const ghPull=document.getElementById("ghPull")
-const ghTokenReset=document.getElementById("ghTokenReset")
-const clearAll=document.getElementById("clearAll")
-
-tabAgenda.onclick=()=>setTab("agenda")
-tabTodo.onclick=()=>setTab("todo")
-function setTab(tab){ data.lastTab=tab; save(); render() }
-
-function handleDragStart(type,index){ dragType=type; dragIndex=index }
-function handleDragOver(e){ e.preventDefault() }
-function handleDrop(type,index){
- if(dragType!==type || dragIndex===index) return
- const list=type==="agenda"?data.agendas:data.todos
- const item=list.splice(dragIndex,1)[0]
- list.splice(index,0,item)
- dragIndex=null; dragType=null
- save(); render()
+if(item.encrypted){
+preview="🔒 암호화된 메모"
+}else{
+preview=item.text ? (item.text.length>150 ? item.text.slice(0,150)+"..." : item.text) : ""
 }
 
-function render(){
- app.innerHTML=""
- tabAgenda.classList.toggle("active",data.lastTab==="agenda")
- tabTodo.classList.toggle("active",data.lastTab==="todo")
- if(data.lastTab==="agenda") renderAgenda()
- else renderTodo()
-}
-
-/* ===== 카테고리 ===== */
-function renderCategoryTabs(){
- const bar=el("div","category-bar")
- const list = data.lastTab==="agenda" ? data.agendas : data.todos
- const totalCount = list.length
- const all=el("div","category-pill "+(data.selectedCategory===null?"active":""))
- all.textContent=`전체 (${totalCount})`
- all.onclick=()=>{data.selectedCategory=null;save();render()}
- bar.appendChild(all)
-
- data.categories.forEach((c,i)=>{
-   const count = list.filter(item=>item.category===i).length
-   const pill=el("div","category-pill "+(data.selectedCategory===i?"active":""))
-   pill.textContent=`${c.name} (${count})`
-   pill.onclick=()=>{data.selectedCategory=i;save();render()}
-   bar.appendChild(pill)
- })
- return bar
-}
-
-function renderCategoryManager(){
- const card=el("div","card")
- card.innerHTML=`
- <div class="row">
-   <select id="catSelect" style="max-width:200px">
-     <option value="">선택</option>
-     ${data.categories.map((c,i)=>`<option value="${i}">${c.name}</option>`).join("")}
-   </select>
-   <input id="catEditName" placeholder="이름 수정" style="max-width:200px">
-   <button onclick="applyCategoryEdit()">적용</button>
-   <button onclick="deleteSelectedCategory()">삭제</button>
-   <input id="catName" placeholder="새 카테고리" style="max-width:200px">
-   <button onclick="addCategory()">추가</button>
- </div>`
- return card
-}
-
-function applyCategoryEdit(){
- const i=document.getElementById("catSelect").value
- const name=document.getElementById("catEditName").value.trim()
- if(i===""||!name) return
- data.categories[i].name=name
- save(); render()
-}
-function deleteSelectedCategory(){
- const i=document.getElementById("catSelect").value
- if(i==="") return
- if(!confirm("삭제할까요?")) return
- data.categories.splice(i,1)
- data.agendas.forEach(a=>{ if(a.category==i) a.category=null })
- data.todos.forEach(t=>{ if(t.category==i) t.category=null })
- data.selectedCategory=null
- save(); render()
-}
-function addCategory(){
- const name=catName.value.trim()
- if(!name) return
- data.categories.push({name})
- save(); render()
-}
-
-/* ===== 안건 ===== */
-function renderAgenda(){
- app.appendChild(renderCategoryTabs())
- app.appendChild(renderCategoryManager())
-
- const addCard=el("div","card")
- addCard.innerHTML=`
- <div class="row">
-   <input id="agTitle" placeholder="안건 제목">
-   <select id="agCategory">
-     <option value="">카테고리 없음</option>
-     ${data.categories.map((c,i)=>`<option value="${i}">${c.name}</option>`).join("")}
-   </select>
-   <select id="agColor">
-     <option value="">기본</option>
-     <option value="#ef4444">빨강</option>
-     <option value="#f97316">주황</option>
-     <option value="#eab308">노랑</option>
-     <option value="#22c55e">초록</option>
-     <option value="#3b82f6">파랑</option>
-     <option value="#6366f1">남색</option>
-     <option value="#a855f7">보라</option>
-   </select>
-   <button onclick="addAgenda()">추가</button>
- </div>`
- app.appendChild(addCard)
-
- let agendas=[...data.agendas]
- agendas.sort((a,b)=>(b.pinned||0)-(a.pinned||0))
-
- agendas
- .filter(a=> data.selectedCategory===null || a.category===data.selectedCategory)
- .filter(a=>filterText(a.title+a.status+a.opinion+a.review+a.progress))
- .forEach(a=>{
-  const i=data.agendas.indexOf(a)
-  const c=el("div","card "+(a.pinned?"pinned":""))
-  c.draggable=true
-  c.ondragstart=()=>handleDragStart("agenda",i)
-  c.ondragover=handleDragOver
-  c.ondrop=()=>handleDrop("agenda",i)
-
-  if(editingIndex===i){
-    c.innerHTML=`
-<input id="editTitle" value="${a.title||""}">
-<select id="editCategory">
-  <option value="">카테고리 없음</option>
-  ${data.categories.map((c,ci)=>`<option value="${ci}" ${a.category===ci?"selected":""}>${c.name}</option>`).join("")}
-</select>
-<select id="editColor">
-  <option value="">기본</option>
-  <option value="#ef4444" ${a.color=="#ef4444"?"selected":""}>빨강</option>
-  <option value="#f97316" ${a.color=="#f97316"?"selected":""}>주황</option>
-  <option value="#eab308" ${a.color=="#eab308"?"selected":""}>노랑</option>
-  <option value="#22c55e" ${a.color=="#22c55e"?"selected":""}>초록</option>
-  <option value="#3b82f6" ${a.color=="#3b82f6"?"selected":""}>파랑</option>
-  <option value="#6366f1" ${a.color=="#6366f1"?"selected":""}>남색</option>
-  <option value="#a855f7" ${a.color=="#a855f7"?"selected":""}>보라</option>
-</select>
-<textarea id="editStatus">${a.status||""}</textarea>
-<textarea id="editOpinion">${a.opinion||""}</textarea>
-<textarea id="editReview">${a.review||""}</textarea>
-<textarea id="editProgress">${a.progress||""}</textarea>
-<div class="row">
-<button onclick="saveEdit(${i})">저장</button>
-<button onclick="cancelEdit()">취소</button>
-<button onclick="togglePin(${i})">${a.pinned?"핀해제":"중요고정"}</button>
-<button onclick="deleteAgenda(${i})">삭제</button>
+thumb=`<div class="thumb" style="
+    display:flex;
+    align-items:center;
+    justify-content:flex-start;
+    padding:8px;
+    text-align:left;
+    background:var(--card);
+    font-size:12px;
+    color:var(--text);
+    overflow:hidden;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    ">
+    ${preview}
 </div>`
-  }else{
-    c.innerHTML=`
-<b style="color:${a.color||'inherit'}">${a.title} ${a.pinned?"📌":""}</b>
-<div class="small">현황</div><div>${a.status||""}</div>
-<div class="small">의견</div><div>${a.opinion||""}</div>
-<div class="small">검토</div><div>${a.review||""}</div>
-<div class="small">경과</div><div>${a.progress||""}</div>
-<div class="row">
-<button onclick="startEdit(${i})">수정</button>
-<button onclick="togglePin(${i})">${a.pinned?"핀해제":"중요고정"}</button>
-<button onclick="deleteAgenda(${i})">삭제</button>
+}
+card.innerHTML=`
+${thumb}
+<div class="link-body">
+<div class="link-title title-${item.type} ${item.encrypted?"🔒":""}">${item.title}</div>
+<div><span class="star ${item.favorite?'active':''}">★</span></div>
 </div>`
-  }
-  app.appendChild(c)
- })
+card.onclick=async ()=>{
+if(item.type==="link"||item.type==="youtube") window.open(item.url,"_blank")
+if(item.type==="text"){
+const textModal=document.getElementById("textModal")
+document.getElementById("textTitle").innerText=item.title
+let content=item.text
+
+if(item.encrypted){
+
+const pw=prompt("비밀번호 입력")
+if(!pw) return
+
+const decrypted=await decryptText(item.text,pw)
+
+if(!decrypted){
+alert("비밀번호 틀림")
+return
 }
 
-function addAgenda(){
- const t=agTitle.value.trim()
- if(!t) return
- data.agendas.unshift({title:t,category: agCategory.value===""?null:Number(agCategory.value),color: agColor.value || "",status:"",opinion:"",review:"",progress:"",pinned:false})
- save(); render()
+content=decrypted
+
 }
 
-function startEdit(i){ editingIndex=i; render() }
-function cancelEdit(){ editingIndex=null; render() }
-function saveEdit(i){
- const catVal=document.getElementById("editCategory").value
- data.agendas[i]={...data.agendas[i],
-   title:editTitle.value,
-   category: catVal===""?null:Number(catVal),
-   color: document.getElementById("editColor").value || "",
-   status:editStatus.value,
-   opinion:editOpinion.value,
-   review:editReview.value,
-   progress:editProgress.value
- }
- editingIndex=null
- save(); render()
+document.getElementById("textBody").innerText=content
+// 다크모드에 따라 배경/글자색 적용
+if(document.body.classList.contains("dark")){
+textModal.querySelector(".modalBox").style.background="#1e293b"
+textModal.querySelector(".modalBox").style.color="#f1f5f9"
+}else{
+textModal.querySelector(".modalBox").style.background="#fff"
+textModal.querySelector(".modalBox").style.color="#111"
 }
-function togglePin(i){ data.agendas[i].pinned=!data.agendas[i].pinned; save(); render() }
-function deleteAgenda(i){ if(!confirm("삭제할까요?"))return; data.agendas.splice(i,1); save(); render() }
+textModal.style.display="flex"
+}
+}
+card.querySelector(".star").onclick=e=>{e.stopPropagation(); item.favorite=!item.favorite; save(); renderLinks()}
+if(manageMode){
+const actions=document.createElement("div"); actions.className="manage-actions"
+const edit=document.createElement("button"); edit.textContent="✏"; edit.onclick=e=>{
+e.stopPropagation()
+const t=prompt("제목",item.title); if(t) item.title=t
+if(item.type==="link"||item.type==="youtube"){
+const u=prompt("URL",item.url)
+if(u) item.url=u
 
-/* ===== TODO ===== */
-function renderTodo(){
- app.appendChild(renderCategoryTabs())
+/* 아이콘 이미지 업로드 */
+const input=document.createElement("input")
+input.type="file"
+input.accept="image/*"
 
- const addCard=el("div","card")
- addCard.innerHTML=`<div class="row">
- <input id="todoText" placeholder="할일 내용">
- <select id="todoCategory">
-  <option value="">카테고리 없음</option>
-  ${data.categories.map((c,i)=>`<option value="${i}">${c.name}</option>`).join("")}
- </select>
- <select id="todoPriority">
- <option value="high">높음</option>
- <option value="mid">보통</option>
- <option value="low">낮음</option>
- </select>
- <input type="date" id="todoDate">
- <button onclick="addTodo()">추가</button></div>`
- app.appendChild(addCard)
-
- data.todos
- .filter(t=> data.selectedCategory===null || t.category===data.selectedCategory)
- .filter(t=>filterText(t.text))
- .forEach((t,i)=>{
-  const c=el("div","card")
-  c.style.display="flex"
-  c.style.alignItems="center"
-  c.style.gap="8px"
-  c.draggable=true
-  c.ondragstart=()=>handleDragStart("todo",i)
-  c.ondragover=handleDragOver
-  c.ondrop=()=>handleDrop("todo",i)
-
-  const prioClass = t.priority==="high"?"prio-high":t.priority==="mid"?"prio-mid":"prio-low"
-
-  if(editingTodoIndex===i){
-    c.innerHTML=`
-    <input id="editTodoText" value="${t.text}">
-    <select id="editTodoCategory">
-      <option value="">카테고리 없음</option>
-      ${data.categories.map((c,ci)=>`<option value="${ci}" ${t.category===ci?"selected":""}>${c.name}</option>`).join("")}
-    </select>
-    <button onclick="saveTodoEdit(${i})">저장</button>
-    <button onclick="cancelTodoEdit()">취소</button>`
-  }else{
-    c.innerHTML=`
-    <div class="todo-text" style="flex:1;text-align:left">
-      <div>${t.text}</div>
-      <div class="small ${prioClass}">${t.priority} | ${t.date||""}</div>
-    </div>
-    <div class="todo-item">
-      <input class="todo-check" type="checkbox" ${t.done?"checked":""} onchange="toggleTodo(${i})">
-      <button onclick="startTodoEdit(${i})">수정</button>
-      <button onclick="deleteTodo(${i})">삭제</button>
-    </div>`
-  }
-  if(t.done) c.classList.add("done")
-  app.appendChild(c)
- })
+input.onchange=async e=>{
+const file=e.target.files[0]
+if(!file) return
+const img=await compressImage(file)
+item.icon=img
+save()
+renderLinks()
 }
 
-function startTodoEdit(i){ editingTodoIndex=i; render() }
-function cancelTodoEdit(){ editingTodoIndex=null; render() }
-function saveTodoEdit(i){
- data.todos[i].text=document.getElementById("editTodoText").value
- const catVal=document.getElementById("editTodoCategory").value
- data.todos[i].category = catVal===""?null:Number(catVal)
- editingTodoIndex=null
- save(); render()
+input.click()
 }
-function addTodo(){
- const text=todoText.value.trim()
- if(!text) return
- data.todos.push({text,category: todoCategory.value===""?null:Number(todoCategory.value),priority:todoPriority.value,date:todoDate.value,done:false})
- save(); render()
+if(item.type==="text"){
+    const modal=document.createElement("div")
+    modal.style.position="fixed"; modal.style.top="0"; modal.style.left="0"; modal.style.width="100%"; modal.style.height="100%"
+    modal.style.background="rgba(0,0,0,0.8)"; modal.style.display="flex"; modal.style.justifyContent="center"; modal.style.alignItems="center"; modal.style.zIndex="9999"
+    const box=document.createElement("div")
+    if(document.body.classList.contains("dark")){box.style.background="#1e293b"; box.style.color="#f1f5f9"}
+    else{box.style.background="#fff"; box.style.color="#111"}
+    box.style.padding="20px"; box.style.borderRadius="16px"; box.style.width="80%"; box.style.maxWidth="600px"; box.style.display="flex"; box.style.flexDirection="column"
+    const ta=document.createElement("textarea"); ta.style.width="100%"; ta.style.height="200px"; ta.style.resize="vertical"; ta.style.background="inherit"; ta.style.color="inherit"; ta.value=item.text||""; box.appendChild(ta)
+    const saveBtn=document.createElement("button"); saveBtn.textContent="저장"; saveBtn.className="primary"; saveBtn.style.marginTop="10px"
+    saveBtn.onclick=()=>{item.text=ta.value; save(); renderLinks(); document.body.removeChild(modal)}
+    box.appendChild(saveBtn); modal.appendChild(box); document.body.appendChild(modal)
 }
-function toggleTodo(i){
- const item=data.todos[i]
- item.done=!item.done
- if(item.done){ data.todos.splice(i,1); data.todos.push(item) }
- save(); render()
+save(); renderLinks()
 }
-function deleteTodo(i){ data.todos.splice(i,1); save(); render() }
-
-function filterText(t){
- const q=searchInput.value.toLowerCase()
- return !q || (t||"").toLowerCase().includes(q)
+const del=document.createElement("button"); del.textContent="🗑"; del.onclick=e=>{e.stopPropagation(); if(confirm("삭제?")){data[currentCategory]=data[currentCategory].filter(d=>d.id!==item.id); save(); renderLinks()}}
+actions.appendChild(edit); actions.appendChild(del); card.appendChild(actions)
 }
-searchInput.oninput=render
-
-toggleDark.onclick=()=>document.body.classList.toggle("dark")
-
-backupBtn.onclick=()=>{
- const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"})
- const a=document.createElement("a")
- a.href=URL.createObjectURL(blob)
- a.download="agenda-backup.json"
- a.click()
-}
-restoreBtn.onclick=()=>fileInput.click()
-fileInput.onchange=e=>{
- const file=e.target.files[0]
- if(!file) return
- const reader=new FileReader()
- reader.onload=()=>{
-   if(confirm("현재 데이터를 덮어쓸까요?")){
-     data=JSON.parse(reader.result)
-     save(); render()
-   }
- }
- reader.readAsText(file)
+if(item.favorite) favBox.appendChild(card)
+else box.appendChild(card)
+})
+if(sortable) sortable.destroy()
+if(favSortable) favSortable.destroy()
+sortable=new Sortable(box,{animation:200,disabled: document.getElementById("topbar").style.display==="none"})
+favSortable=new Sortable(favBox,{animation:200,disabled: document.getElementById("topbar").style.display==="none"})
 }
 
-/* GitHub Sync */
-const GH_REPO="data"
-const GH_OWNER="apor76-cmyk"
-const GH_PATH="data/agendatodo.json"
-const TOKEN_KEY="gh_token"
+function showModal(src){document.getElementById("modalImg").src=src; document.getElementById("photoModal").style.display="flex"}
+async function compressImage(file){return new Promise(resolve=>{const img=new Image(); const reader=new FileReader(); reader.onload=e=>{img.src=e.target.result; img.onload=()=>{const canvas=document.createElement("canvas"); const ctx=canvas.getContext("2d"); 
+const max=256;
+let w=img.width;
+let h=img.height;
 
-function getToken(){
- let t=localStorage.getItem(TOKEN_KEY)
- if(!t){
-   t=prompt("GitHub Token 입력 (repo 권한)")
-   if(t) localStorage.setItem(TOKEN_KEY,t)
- }
- return t
+if(w>max || h>max){
+const ratio=Math.min(max/w,max/h)
+w=w*ratio
+h=h*ratio
 }
 
-ghTokenReset.onclick=()=>{
- localStorage.removeItem(TOKEN_KEY)
- alert("토큰이 초기화되었습니다")
+canvas.width=w;
+canvas.height=h;
+ctx.drawImage(img,0,0,w,h);
+
+resolve(canvas.toDataURL("image/jpeg",0.7))}}; reader.readAsDataURL(file)})}
+async function addLink(){
+const type=document.getElementById("type").value
+const title=document.getElementById("title").value
+const url=document.getElementById("url").value
+const text=document.getElementById("text").value
+const file=document.getElementById("file").files[0]
+if(!title) return alert("제목 입력")
+if(type==="photo" && file){const img=await compressImage(file); data[currentCategory].push({id:Date.now(),title,type,url:img,favorite:false})}else{if(type==="text"){
+
+let encrypted=false
+let storedText=text
+
+if(confirm("텍스트를 암호화하시겠습니까?")){
+const pw=prompt("암호 입력")
+if(pw){
+storedText=await encryptText(text,pw)
+encrypted=true
+}
 }
 
-ghPush.onclick=async()=>{
- const token=getToken()
- if(!token) return
+data[currentCategory].push({
+id:Date.now(),
+title,
+text:storedText,
+type,
+encrypted,
+favorite:false
+})
 
- const url=`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}`
+}
+else{
 
- let sha=null
- const res=await fetch(url,{headers:{Authorization:`token ${token}`}})
- if(res.ok){ const j=await res.json(); sha=j.sha }
+data[currentCategory].push({
+id:Date.now(),
+title,
+url,
+text,
+type,
+icon:null,
+favorite:false
+})
 
- const body={
-   message:"update agenda data",
-   content:btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2)))),
-   sha
- }
-
- const r=await fetch(url,{
-   method:"PUT",
-   headers:{Authorization:`token ${token}`},
-   body:JSON.stringify(body)
- })
-
- if(r.ok) alert("업로드 완료")
- else alert("업로드 실패")
+}}
+save(); renderLinks()
+document.getElementById("title").value=""; document.getElementById("url").value=""; document.getElementById("text").value=""; document.getElementById("file").value=""
 }
 
-ghPull.onclick=async()=>{
- const token=getToken()
- if(!token) return
+function toggleManage(){manageMode=!manageMode; renderCategories(); renderLinks()}
+function downloadBackup(){const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="linkmanager_backup1.json"; a.click()}
+function restoreBackup(){const input=document.createElement("input"); input.type="file"; input.onchange=e=>{const reader=new FileReader(); reader.onload=x=>{data=JSON.parse(x.target.result); save(); renderCategories(); renderLinks()}; reader.readAsText(e.target.files[0])}; input.click()}
+function getToken(){let t=localStorage.getItem("ghToken"); if(!t){t=prompt("GitHub Token"); if(t) localStorage.setItem("ghToken",t)}; return t}
+async function syncToGit(){const token=getToken(); if(!token) return
+const url=`https://api.github.com/repos/${GITHUB.user}/${GITHUB.repo}/contents/${GITHUB.dataPath}`
+let sha=null
+const r=await fetch(url,{headers:{Authorization:`Bearer ${token}`}})
+if(r.ok){const f=await r.json(); sha=f.sha}
+await fetch(url,{method:"PUT",headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},body:JSON.stringify({message:"update data",content:btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2)))),sha})})
+alert("업로드 완료")}
 
- const url=`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_PATH}`
+async function syncFromGit(){const token=getToken(); if(!token) return
+const url=`https://api.github.com/repos/${GITHUB.user}/${GITHUB.repo}/contents/${GITHUB.dataPath}`
+const r=await fetch(url,{headers:{Authorization:`Bearer ${token}`}})
+if(!r.ok) return alert("파일 없음")
+const f=await r.json()
+data=JSON.parse(decodeURIComponent(escape(atob(f.content))))
+save(); renderCategories(); renderLinks(); alert("동기화 완료")}
 
- const res=await fetch(url,{headers:{Authorization:`token ${token}`}})
- if(!res.ok){ alert("파일 없음"); return }
-
- const j=await res.json()
- const decoded=decodeURIComponent(escape(atob(j.content)))
- data=JSON.parse(decoded)
- save(); render()
- alert("다운로드 완료")
-}
-
-// 비밀번호 변경 버튼 추가
-const pwBtn=document.createElement("button")
-pwBtn.textContent="비밀번호 변경"
-pwBtn.onclick=changePassword
-document.querySelector("header").appendChild(pwBtn)
-
-// ===== 전체 삭제 기능 =====
-clearAll.onclick = () => {
-  if(confirm("정말 안건과 할일을 모두 삭제하시겠습니까?")){
-    data.agendas=[]
-    data.todos=[]
-    save(); render()
-  }
-}
-
-render()
+load(); renderCategories(); renderLinks()
 </script>
+
 </body>
 </html>
-
-

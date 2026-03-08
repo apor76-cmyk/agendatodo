@@ -334,7 +334,7 @@ return null
 }
 
 }
-const GITHUB={user:"apor76-cmyk",repo:"data1",dataPath:"linkmanager.json"}
+const GITHUB={user:"apor76-cmyk",repo:"data",dataPath:"linkmanager1.json"}
 let data={Home:[]}, currentCategory="Home", manageMode=false, sortable, favSortable
 
 function save(){localStorage.setItem("lmData1",JSON.stringify(data))}
@@ -503,7 +503,7 @@ textModal.style.display="flex"
 card.querySelector(".star").onclick=e=>{e.stopPropagation(); item.favorite=!item.favorite; save(); renderLinks()}
 if(manageMode){
 const actions=document.createElement("div"); actions.className="manage-actions"
-const edit=document.createElement("button"); edit.textContent="✏"; edit.onclick=e=>{
+const edit=document.createElement("button"); edit.textContent="✏"; edit.onclick=async e=>{
 e.stopPropagation()
 const t=prompt("제목",item.title); if(t) item.title=t
 if(item.type==="link"||item.type==="youtube"){
@@ -527,18 +527,93 @@ renderLinks()
 input.click()
 }
 if(item.type==="text"){
-    const modal=document.createElement("div")
-    modal.style.position="fixed"; modal.style.top="0"; modal.style.left="0"; modal.style.width="100%"; modal.style.height="100%"
-    modal.style.background="rgba(0,0,0,0.8)"; modal.style.display="flex"; modal.style.justifyContent="center"; modal.style.alignItems="center"; modal.style.zIndex="9999"
-    const box=document.createElement("div")
-    if(document.body.classList.contains("dark")){box.style.background="#1e293b"; box.style.color="#f1f5f9"}
-    else{box.style.background="#fff"; box.style.color="#111"}
-    box.style.padding="20px"; box.style.borderRadius="16px"; box.style.width="80%"; box.style.maxWidth="600px"; box.style.display="flex"; box.style.flexDirection="column"
-    const ta=document.createElement("textarea"); ta.style.width="100%"; ta.style.height="200px"; ta.style.resize="vertical"; ta.style.background="inherit"; ta.style.color="inherit"; ta.value=item.text||""; box.appendChild(ta)
-    const saveBtn=document.createElement("button"); saveBtn.textContent="저장"; saveBtn.className="primary"; saveBtn.style.marginTop="10px"
-    saveBtn.onclick=()=>{item.text=ta.value; save(); renderLinks(); document.body.removeChild(modal)}
-    box.appendChild(saveBtn); modal.appendChild(box); document.body.appendChild(modal)
+
+let textValue = item.text
+
+// 🔐 암호화된 경우 비밀번호 입력
+if(item.encrypted){
+
+const pw = prompt("비밀번호 입력")
+if(!pw) return
+
+const decrypted = await decryptText(item.text,pw)
+
+if(!decrypted){
+alert("비밀번호 틀림")
+return
 }
+
+textValue = decrypted
+}
+
+const modal=document.createElement("div")
+modal.style.position="fixed"
+modal.style.top="0"
+modal.style.left="0"
+modal.style.width="100%"
+modal.style.height="100%"
+modal.style.background="rgba(0,0,0,0.8)"
+modal.style.display="flex"
+modal.style.justifyContent="center"
+modal.style.alignItems="center"
+modal.style.zIndex="9999"
+
+const box=document.createElement("div")
+
+if(document.body.classList.contains("dark")){
+box.style.background="#1e293b"
+box.style.color="#f1f5f9"
+}else{
+box.style.background="#fff"
+box.style.color="#111"
+}
+
+box.style.padding="20px"
+box.style.borderRadius="16px"
+box.style.width="80%"
+box.style.maxWidth="600px"
+box.style.display="flex"
+box.style.flexDirection="column"
+
+const ta=document.createElement("textarea")
+ta.style.width="100%"
+ta.style.height="200px"
+ta.style.resize="vertical"
+ta.style.background="inherit"
+ta.style.color="inherit"
+ta.value=textValue||""     // 🔐 수정
+box.appendChild(ta)
+
+const saveBtn=document.createElement("button")
+saveBtn.textContent="저장"
+saveBtn.className="primary"
+saveBtn.style.marginTop="10px"
+
+// 🔐 저장 시 다시 암호화
+saveBtn.onclick=async ()=>{
+
+let newText = ta.value
+
+if(item.encrypted){
+const pw = prompt("암호 확인 (저장)")
+if(!pw) return
+newText = await encryptText(newText,pw)
+}
+
+item.text=newText
+save()
+renderLinks()
+document.body.removeChild(modal)
+
+}
+
+box.appendChild(saveBtn)
+modal.appendChild(box)
+document.body.appendChild(modal)
+
+}
+
+
 save(); renderLinks()
 }
 const del=document.createElement("button"); del.textContent="🗑"; del.onclick=e=>{e.stopPropagation(); if(confirm("삭제?")){data[currentCategory]=data[currentCategory].filter(d=>d.id!==item.id); save(); renderLinks()}}
@@ -618,7 +693,7 @@ document.getElementById("title").value=""; document.getElementById("url").value=
 }
 
 function toggleManage(){manageMode=!manageMode; renderCategories(); renderLinks()}
-function downloadBackup(){const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="linkmanager_backup1.json"; a.click()}
+function downloadBackup(){const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="linkmanager1_backup.json"; a.click()}
 function restoreBackup(){const input=document.createElement("input"); input.type="file"; input.onchange=e=>{const reader=new FileReader(); reader.onload=x=>{data=JSON.parse(x.target.result); save(); renderCategories(); renderLinks()}; reader.readAsText(e.target.files[0])}; input.click()}
 function getToken(){let t=localStorage.getItem("ghToken"); if(!t){t=prompt("GitHub Token"); if(t) localStorage.setItem("ghToken",t)}; return t}
 async function syncToGit(){const token=getToken(); if(!token) return
